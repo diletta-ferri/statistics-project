@@ -22,7 +22,7 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results) {
   
   #nota: sto dando per scontato che i dataset passati alla funzione siano già normalizzati con media e sd 
   switch (type,
-    regression = {
+    "regression" = {
       #Normalization:
       feat_norm <- setdiff(all_columns, columns_with_only_0_1)
       scaling_factors <- apply(train_data[, feat_norm], 2, function(x) c(mean(x), sd(x))) 
@@ -45,7 +45,7 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results) {
       #da decidere come fare
     },
     
-    bin_classification = {
+    "bin_classification" = {
       #Normalization:
       feat_norm <- setdiff(features, columns_with_only_0_1)
       scaling_factors <- apply(train_data[, feat_norm], 2, function(x) c(mean(x), sd(x))) 
@@ -75,7 +75,7 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results) {
       #da decidere come fare
     },
     
-    multiclass = {
+    "multiclass" = {
       #Normalization:
       feat_norm <- setdiff(features, columns_with_only_0_1)
       scaling_factors <- apply(train_data[, feat_norm], 2, function(x) c(mean(x), sd(x))) 
@@ -102,4 +102,6 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results) {
       #da decidere come fare
     }
   )
+  
+  return(results)
 }
