@@ -18,61 +18,74 @@ desc$default.target.attribute
 #________________________________________
 
 
-megaf= function(data,target, encoder){ # le funzioni che chiamo in megaf ce le ho in uno script a parte
+megaf= function(data,target, encoder, thr){ # le funzioni che chiamo in megaf ce le ho in uno script a parte
   
   # handle missing values and remove constant columns
-  data = first_prep(data)
+  # encoding. Per ora le funzioni sono uguali sia per train che test, TODO in corso
+  if (encoder == "integer"){
+    encoded_data= integer_encoding_tt(train_data, test_data, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
   
-  # splitting
-  test_ratio = 0.3 
-  set.seed(123)
-  split_indices = createDataPartition(data, p = test_ratio, list = FALSE)
-  train_data = data[-split_indices, ]
-  test_data = data[split_indices, ]
+  if (encoder == "frequency"){
+    encoded_data= frequency_encoding_tt(train_data, test_data, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
   
+  if (encoder == "impact"){
+    encoded_data= impact_encoding_tt(train_data, test_data,target, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
   
-  for (thr in thresholds){ 
-    # encoding. Per ora le funzioni sono uguali sia per train che test, TODO in corso
-    if (encoder == "integer"){
-      encoded_train = integer_encoding(train_data, thr)
-      encoded_test = integer_encoding(test_data, thr)
+  if (encoder == "hash"){
+    encoded_data= hash_encoding_tt(train_data, test_data, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
+  if (encoder == "remove"){
+    encoded_data= remove_encoding_tt(train_data, test_data, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
+  if (encoder == "glmm"){
+    encoded_data = glmm_encoding_wrapper(train_set, test_set, target, thr)
+    if(class(encoded_data) == "character"){
+      next # smetto di iterare sulle thr
     }
-    
-    if (encoder == "frequency"){
-      encoded_train = frequency_encoding(train_data, thr)
-      encoded_test = frequency_encoding(test_data, thr)
-    }
-    
-    if (encoder == "impact"){
-      encoded_train = impact_encoding(train_data, thr, target)
-      encoded_test = impact_encoding(test_data, thr, target)
-    }
-    
-    if (encoder == "hash"){
-      encoded_train = hash_encoding(train_data, thr, target)
-      encoded_test = hash_encoding(test_data, thr, target)
-    }
-    
+    encoded_train = encoded_data$train
+    encoded_test = encoded_data$test 
+  }
+  if (encoder == "leaf"){
+    encoded_data = leaf_encoding_train(train_set, target, thr)
+    encoded_train = encoded_data$data
+    foglie_comuni = encoded_data$most_common_leaves
+    tabella_codifica = encoding_data$output_table
+    encoded_test = leaf_encoding_test(test_set, encoded_train, target, foglie_comuni, tabella_codifica)
+  }
+ 
     # removing costants again
     
-    encoded_train = drop_cost(encoded_train)
-    encoded_test = drop_cost(encoded_test)
+    
+  #encoded_train = drop_cost(encoded_train)
+  #encoded_test = drop_cost(encoded_test)
     
     # final one hot encoding 
     
-    ohe_train = dummyVars(" ~ .", data = encoded_train)
-    ohe_test = dummyVars(" ~ .", data = encoded_test)    
-    final_train = data.frame(predict(ohe_train, newdata = encoded_train))
-    final_test = data.frame(predict(ohe_train, newdata = encoded_test))
+  #ohe_train = dummyVars(" ~ .", data = encoded_train)
+  #ohe_test = dummyVars(" ~ .", data = encoded_test)    
+  #final_train = data.frame(predict(ohe_train, newdata = encoded_train))
+  #final_test = data.frame(predict(ohe_train, newdata = encoded_test))
+
   
-    
-    #TODO fit, predict and get_results
-    
-    
-    
-    
-    }   
-}
+
+  
+  
+  return (list(train= encoded_train, test= encoded_test))
+  
+  }   
 
 
 
@@ -85,7 +98,7 @@ codes = list( Midwest_survey = 41446,
   airlines = 42493,
   ames_housing = 41211,
   avocado_sales = 41210,
-  # beer = 42494, --> ci mette troppo a caricare, forse è pesantissimo
+  # beer = 42494, --> funziona ma ci mette troppo a caricare il dataset
   churn = 41283,
   click_prediction_small = 41220,
   delays_zurich = 42495,
@@ -107,26 +120,63 @@ codes = list( Midwest_survey = 41446,
 )
 
 
-#auc_res= data.frame()
-#aunu_res= data.frame()
-#rmse_res= data.frame()
 
-encodings= c("integer", "impact", ...)
+
+encodings= c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "none")
 thresholds = c(10,25,125)
-for (i in 1:length(codici)){
-  data_name = names(codici[i])
+
+for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
+  data_name = names(codes[i])
   id=codici[[data_name]]
   get_data=getOMLDataSet(data.id = id)
   data= get_data$data # per avere i dati tabulari
   target=get_data$target.features # le target si possono prendere cosi 
   
-  for (encoder in encodings){
-    result = megaf(data,target,encoder) 
-    # TODO ASSEGNAZIONE RISULTATI 
-    # l'idea sarebbe avere come risultato di ciascuna chiamata di megaf un vettore o lista del tipo:
-    #--> (data= paste0(data_name,encoder) thr1= 0.90, thr2= 0.85, thr3= 0.77). QUsta poi andrebbe inserita in una dei 3 dataframe sopra in base al tipo di target
+  data_prep = first_prep(data)
+  
+  # splitting
+  tt=tt_split(data_prep, target, 0.3)
+  train_data= tt$train
+  test_data= tt$test
+ 
+  for (encoder in encodings){# per ogni dataset, ogni encoding
+    if (encoder=="none"){# none fa parte delle control conditions, l'ho messo fuori perchè non fa nulla e non ha bisgno di threshold. Di conseguenza andrebbe gestito a parte.
+      encoded_train= train_data
+      encoded_test= test_data
+      # mettere modello
+      next
+      
+    }
+    if (encoder=="onehot"){# anche lui va messo fuori perchè non ha threshold
+      # in questo caso lavoro pre-splitting perchè diventava un casino gestire i vari livelli delle categoriche 
+      #e si rischiava di avere shape diverse tra train e test
+      encoded_data= one_hot_encoding(data_prep)
+      encoded_data_tt= tt_split(encoded_data, target, 0.3)
+      encoded_train= encoded_data_tt$train
+      encoded_test= encoded_data_tt$test
+      #mettere modello
+      next
+      
+    }
+    if (encoder=="dummy"){# stesso discorso di onehot
+      encoded_data= dummy_encoding(data_prep, target)
+      encoded_data_tt= tt_split(encoded_data, target, 0.3)
+      encoded_train= encoded_data_tt$train
+      encoded_test= encoded_data_tt$test
+      #mettere modello
+      next
+    }
+    for (thr in thresholds){# per ogni encoding 
+      encoded_data= megaf(data, target, encoder, thr)
+      encoded_train= encoded_data$train
+      encoded_test= encoded_data$test
+      # mettere modello
+      
+    }
   }
 }
+
+#____________________________________
 
 
 
