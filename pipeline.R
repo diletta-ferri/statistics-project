@@ -135,9 +135,17 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
   data_prep = first_prep(data)
   
   # splitting
-  tt=tt_split(data_prep, target, 0.3)
-  train_data= tt$train
-  test_data= tt$test
+  # tt=tt_split(data_prep, target, 0.3)
+  # train_data= tt$train
+  # test_data= tt$test
+  
+  # codice alternativo per splittare: 
+  set.seed(123)
+  test_percentage <- 0.3
+  num_test <- round(nrow(data_prep) * test_percentage)
+  test_indices <- sample(seq_len(nrow(data_prep)), size = num_test)
+  test_set <- data_prep[test_indices, ]
+  train_set <- data_prep[-test_indices, ]
  
   for (encoder in encodings){# per ogni dataset, ogni encoding
     if (encoder=="none"){# none fa parte delle control conditions, l'ho messo fuori perchè non fa nulla e non ha bisgno di threshold. Di conseguenza andrebbe gestito a parte.
@@ -167,7 +175,7 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
       next
     }
     for (thr in thresholds){# per ogni encoding 
-      encoded_data= megaf(data, target, encoder, thr)
+      encoded_data= megaf(data_prep, target, encoder, thr)
       encoded_train= encoded_data$train
       encoded_test= encoded_data$test
       # mettere modello
