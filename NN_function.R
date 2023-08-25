@@ -35,8 +35,8 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results) {
       }
       
       #NN:
-      nn_model <- neuralnet(formula, data = scaled_train_data, hidden = 50, linear.output = TRUE)
-      pr_nn <- predict(nn_model, newdata = scaled_test_data)
+      nn_model <- neuralnet(formula, data = scaled_train_data, hidden = 10, threshold=0.1, rep=3, linear.output = TRUE)
+      pr_nn <- predict(nn_model, rep="best", newdata = scaled_test_data)
       #Tolgo la normalizzazione (questa era la formula per annullare la normalizzazione come l'avevo fatta io, ovviamente in caso va cambiata):
       unscaled_predicted <- pr.nn * scaling_factors[2,target] + scaling_factors[1,target] 
       #Calcolo RMSE:
@@ -61,8 +61,8 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results) {
       }
       
       #NN:
-      nn_model <- neuralnet(formula, data = scaled_train_data, hidden = 50, linear.output = FALSE)
-      pr_nn_probs <- predict(nn_model, newdata = scaled_test_data) #da le probabilità di ognuni classe
+      nn_model <- neuralnet(formula, data = scaled_train_data, hidden = 10, threshold=0.1, rep=3, linear.output = FALSE)
+      pr_nn_probs <- predict(nn_model, rep="best", newdata = scaled_test_data) #da le probabilità di ognuni classe
       #rendo uniformi le classi predette e quella del test, per poter calcolare l'AUC
       column_names <- unique(test_data[[target]])
       max_column_indices <- max.col(pr_nn_probs)
@@ -92,8 +92,8 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results) {
       
       #NN:
       train_data[[target]] <- as.factor(train_data[[target]]) #mi assicuro che sia in livelli, se lo sono già tutte non è necessario
-      nn_model <- neuralnet(formula, data = scaled_train_data, hidden = 50, linear.output = FALSE)
-      pr_nn_probs <- predict(nn_model, newdata = scaled_test_data)
+      nn_model <- neuralnet(formula, data = scaled_train_data, hidden = 10, threshold=0.1, rep=3, linear.output = FALSE)
+      pr_nn_probs <- predict(nn_model, rep="best", newdata = scaled_test_data)
       colnames(pr_nn_probs) <- unique(test_data[[target]])
       #Calcolo AUNU:
       library(mlr3measures)
