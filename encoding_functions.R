@@ -526,3 +526,153 @@ dummy_encoding= function(data, target){
   
   
 }
+
+leaf_encoding_train <- function(training, target, threshold) {
+  data <- training 
+  categorical_cols = sapply(data, function(col) is.factor(col) || is.character(col)) # trovo categoriche di cui fare la codifica
+  most_common_leaves <- list()
+  output_table <- data.frame()
+  
+  for (col_name in names(data)[categorical_cols]){
+    if (is.character(data[[col_name]])) {  # trasformo chr in factor 
+      new_col <- factor(data[[col_name]])
+      data[[col_name]] <- new_col
+    }
+    
+    col_levels = length(unique(data[[col_name]]))
+    if (col_name == target){ 
+      next 
+    }
+    if (col_levels > threshold){
+      
+      # addestro decision tree
+      predittore = data[[col_name]]
+      target_col = data[[target]]
+      if ((length(unique(target_col)) > 2) && (class(target_col) == "factor" || class(target_col) == "character")) { # classificazione multiclasse 
+        model = ranger(target_col ~ ., data = data.frame(predittore, target_col), num.trees = 1)
+        leaf_indices = getTerminalNodeIDs(model, dat = data.frame(predittore, target_col))
+      } else {
+        model = rpart(target_col ~ predittore, data = data)
+        leaf_indices = rpart.predict.leaves(model, data, type = "where")
+      }
+      
+      new_col_name <- paste(col_name, "LeafID", sep = "_")
+      data[[new_col_name]] = as.factor(leaf_indices)  # creo la nuova colonna nel nuovo dataframe che contiene gli ID 
+      
+      # creo tabella codifica
+      tmp = unique(data.frame(Livello = data[[col_name]], Codifica = data[[new_col_name]]))
+      new_colonna <- paste(col_name, "_encoded", sep = "")
+      colnames(tmp)[colnames(tmp) == "Livello"] <- col_name
+      colnames(tmp)[colnames(tmp) == "Codifica"] <- new_colonna
+      output_table = cbind.fill(output_table, tmp)
+      rownames(output_table) <- NULL
+      
+      
+      # codifica one hot della colonna ID 
+      if (length(unique(data[[new_col_name]])) >1){
+        one_hot_encoded_col = model.matrix(~data[[new_col_name]] - 1, data = data) # one hot encoding
+        col_names = colnames(one_hot_encoded_col) # estraggo i nomi delle colonne nella 01 matrix
+        colnames(one_hot_encoded_col) = gsub("data\\[\\[new_col_name\\]\\]", paste0("",col_name, sep="_"), col_names)
+        data = cbind(data, one_hot_encoded_col)
+        # View(data)
+        
+        # trovo nodo foglia più popoloso - serve per i nuovi livelli osservati durante la predizione test set 
+        leaf_counts <- table(leaf_indices)
+        most_common_leaf <- as.integer(names(leaf_counts)[which.max(leaf_counts)])
+        most_common_leaves[[col_name]] <- most_common_leaf
+        # print("cane")
+        data[[new_col_name]] = NULL # per droppare colonna contenente LeafID 
+      } else {
+        data[[new_col_name]] = NULL  # la droppo perchè è costante
+      }
+    }  else {   # solo one hot perchè numero livelli < THR 
+      
+      encoded_data <- model.matrix(~ data[[col_name]] - 1, data = data)
+      col_names <- colnames(encoded_data)
+      colnames(encoded_data) <- gsub("data\\[\\[col_name\\]\\]", paste0("", col_name, sep="_"), col_names)
+      data <- cbind(data, encoded_data)
+    }
+    
+    data[[col_name]] = NULL  # per droppare colonna originale che è stata codificata
+  }
+  
+  return(list(data = data, most_common_leaves = most_common_leaves, output_table = as.data.frame(output_table)))
+}
+
+
+leaf_encoding_test <- function(test_data, encoded_train, target, most_common_leaves, output_table){
+  data = test_data
+  encoded_train_cols = colnames(encoded_train)
+  categorical_cols = sapply(data, function(col) is.factor(col) || is.character(col))
+  for (col_name in names(data)[categorical_cols]){
+    new_col_name <- paste(col_name, "_encoded", sep = "")
+    if (col_name == target) {
+      next
+    }
+    
+    if (col_name %in% names(output_table)){ # questa colonna nel train era stata codificata con i leafID - ie superava la THR
+      encoding_df = output_table[, c(col_name, new_col_name)]
+      
+      # check nuovi livelli 
+      #new_levels = setdiff(data[[col_name]], encoding_df[[col_name]]) # elementi presenti nella colonna nel test ma non nel training
+      #if (length(new_levels) > 0) {
+      # new_levels_encoded <- rep(most_common_leaves[[col_name]], length(new_levels))
+      #new_levels_df <- data.frame(col_name = new_levels, new_col_name = new_levels_encoded)
+      #print(new_levels_df)
+      #colnames(new_levels_df) <- colnames(encoding_df)
+      #encoding_df <- rbind(encoding_df, new_levels_df)
+      #}
+      
+      
+      data = merge(data, encoding_df, by= col_name)
+      for (column in colnames(data)) {
+        if (column %in% colnames(output_table)) {
+          na_indices <- is.na(data[[column]])
+          if (any(na_indices)) {
+            codifica <- output_table[[column]]
+            data[[column]][na_indices] <- codifica[na_indices]
+          }
+        }
+      }
+      
+      # codifica one hot della colonna ID 
+      if (length(unique(data[[new_col_name]])) >1){
+        one_hot_encoded_col = model.matrix(~data[[new_col_name]] - 1, data = data) # one hot encoding
+        col_names = colnames(one_hot_encoded_col) # estraggo i nomi delle colonne nella 01 matrix
+        colnames(one_hot_encoded_col) = gsub("data\\[\\[new_col_name\\]\\]", paste0("",col_name, sep="_"), col_names)
+        data = cbind(data, one_hot_encoded_col)
+      } 
+      data[[new_col_name]] = NULL 
+    } else { # fai solo one hot encodingdi quella colonna e prosegui
+      one_hot_encoded_col = model.matrix(~data[[col_name]] - 1, data = data)
+      col_names = colnames(one_hot_encoded_col)
+      colnames(one_hot_encoded_col) = gsub("data\\[\\[col_name\\]\\]", paste0("", col_name, sep="_"), col_names)
+      data = cbind(data, one_hot_encoded_col)
+    }
+    
+    data[[col_name]] = NULL
+  }
+  for (colonna in encoded_train_cols) {
+    if (!(colonna %in% names(data))) {
+      data[[colonna]] <- 0
+    }
+  }
+  for (colonna in colnames(data)) {
+    if (!(colonna %in% encoded_train_cols)){
+      data[[colonna]] = NULL 
+    }
+  }
+  print(length(encoded_train_cols) == length(colnames(data)))
+  return(data)
+  
+}
+
+cbind.fill <- function(...){
+  nm <- list(...) 
+  nm <- lapply(nm, as.matrix)
+  n <- max(sapply(nm, nrow)) 
+  do.call(cbind, lapply(nm, function (x) 
+    rbind(x, matrix(, n-nrow(x), ncol(x))))) 
+}
+
+
