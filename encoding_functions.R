@@ -1,7 +1,7 @@
 library(caret)
 library(ranger)
 library(ISwR)
-library(dyplr)
+library(dplyr)
 
 #_________________MISC.___________________________________
 
