@@ -50,7 +50,21 @@ megaf= function(data,target, encoder, thr){ # le funzioni che chiamo in megaf ce
     encoded_train= encoded_data$train
     encoded_test= encoded_data$test
   }
-  
+  if (encoder == "glmm"){
+    encoded_data = glmm_encoding_wrapper(train_set, test_set, target, thr)
+    if(class(encoded_data) == "character"){
+      next # smetto di iterare sulle thr
+    }
+    encoded_train = encoded_data$train
+    encoded_test = encoded_data$test 
+  }
+  if (encoder == "leaf"){
+    encoded_data = leaf_encoding_train(train_set, target, thr)
+    encoded_train = encoded_data$data
+    foglie_comuni = encoded_data$most_common_leaves
+    tabella_codifica = encoding_data$output_table
+    encoded_test = leaf_encoding_test(test_set, encoded_train, target, foglie_comuni, tabella_codifica)
+  }
  
     # removing costants again
     
