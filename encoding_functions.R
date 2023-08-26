@@ -8,38 +8,6 @@ library(fastDummies) # for dummy
 
 #_________________MISC.___________________________________
 
-
-first_prep = function(data) {
-  col_names = colnames(data)
-  
-  for (col in col_names) {
-    if (is.numeric(data[[col]])) {
-      col_mean = mean(data[[col]], na.rm = TRUE)
-      data[[col]][is.na(data[[col]])] = col_mean
-    } 
-    else if (is.logical(data[[col]]) || length(unique(data[[col]])) == 2) {
-      col_mode = names(sort(-table(data[[col]], useNA = "always")))[1]
-      data[[col]][is.na(data[[col]])] = as.logical(col_mode)
-    } 
-    else if (is.factor(data[[col]]) || (is.character(data[[col]]) && length(unique(data[[col]])) > 2)) {
-     
-      if (sum(is.na(data[[col]])>0) && col!= target){ # check se ci sono na e skip della target 
-      levels(data[[col]]) = c(levels(data[[col]]), "Missing")
-      data[[col]][is.na(data[[col]])] = "Missing"
-      }
-    }
-      
-    else if (length(unique(data[[col]])) == 1) {
-      data[[col]] = NULL
-    }
-  }
-  
-  return(data)
-}
-
-
-#-------
-
 drop_cost= function(data){
   
   col_names = colnames(data)
@@ -138,7 +106,6 @@ integer_encoding_tt = function(train_data, test_data, threshold) {
 
 
 
-}
 
 #--------------
 
@@ -488,7 +455,7 @@ remove_encoding_tt= function(train_data, test_data, threshold){
 
 
 #-----------
-one_hot_encoding= function(data, target){
+one_hot_encoding= function(data, target, dummy=FALSE){
   categorical_cols = sapply(data, function(col) is.factor(col) || is.character(col)) # check whether a column is categorical , return a T F vector
   
   for (col_name in names(data)[categorical_cols]) {# loops only on categorical columns because of the T/F vector 
@@ -500,7 +467,6 @@ one_hot_encoding= function(data, target){
       data[[col_name]]=NULL
       next
     }
-    
     
     data[[col_name]] = factor(data[[col_name]])
     levels(data[[col_name]]) = c(levels(data[[col_name]]), "Other")
@@ -517,25 +483,19 @@ one_hot_encoding= function(data, target){
     encoded_col = model.matrix(~data[[col_name]]-1 , data = data)
     data[[col_name]]=NULL
     colnames(encoded_col) = gsub("data\\[\\[col_name\\]\\]", paste0(col_name, sep="_"), colnames(encoded_col)) 
+    
+    if (dummy){
+      encoded_col= encoded_col[-1]
+  
+    }
+    
     data = cbind(data, encoded_col) # add new encoded columns
   } 
+  
   return (data)
   
 }
-#-------------
-
-
-dummy_encoding= function(data, target){
-  
-  c_data=copy(data)
-  c_data[[target]]= NULL # remove the target
-  dmy_data= dummy_columns(c_data, remove_first_dummy = TRUE)
-  dmy_data[[target]]= data[[target]]# put the target back
-  
-  return(dmy_data)
-
-}
-
+                            
 #----------------------------                            
 leaf_encoding_train <- function(training, target, threshold) {
   data <- training 
