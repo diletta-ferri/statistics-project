@@ -8,6 +8,8 @@ library(caret)
 library(pROC)
 library(lme4)
 library(rpart)
+install.packages("treeClust")
+library(treeClust)
 
 #__________prove varie__________________________________
 # set configuration per openML -  API key to read only
@@ -20,7 +22,10 @@ oml_dat[["desc"]]
 target = desc$default.target.attribute
 #________________________________________
 
-churn_result <- data.frame(prima_col=c(0,0,0,0,0)) #creo il dataset in cui salverò i risultati della rete
+#creare il dataset iniziale:
+#churn_result <- data.frame(prima_col=c(0,0,0,0,0)) #creo il dataset in cui salverò i risultati della rete
+#finire di aggiungere:
+churn_result <- readRDS("churn_results_quasicompleto.rds")
 tipo_problema = "bin_classification"
 
 megaf= function(data,target, encoder, thr){ # le funzioni che chiamo in megaf ce le ho in uno script a parte
@@ -67,7 +72,7 @@ megaf= function(data,target, encoder, thr){ # le funzioni che chiamo in megaf ce
     encoded_data = leaf_encoding_train(train_data, target, thr)
     encoded_train = encoded_data$data
     foglie_comuni = encoded_data$most_common_leaves
-    tabella_codifica = encoding_data$output_table
+    tabella_codifica = encoded_data$output_table
     encoded_test = leaf_encoding_test(test_data, encoded_train, target, foglie_comuni, tabella_codifica)
   }
   
@@ -283,6 +288,6 @@ for (encoder in enc_2.1){# per ogni dataset, ogni encoding
   }
 }
 
-saveRDS(churn_result, file = "churn_results_quasicompleto.rds")
+saveRDS(churn_result, file = "churn_results_senza_onehot_e_dummy.rds")
 #quando lo vorrò ottenere di nuovo:
-#loaded_data <- readRDS("churn_results_enc1.rds")
+#loaded_data <- readRDS("churn_results_quasicompleto.rds")
