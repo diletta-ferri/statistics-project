@@ -1,8 +1,11 @@
 library(caret)
 library(ranger)
-library(ISwR)
+library(ISwR) ) # for utftoint in hash
 library(dplyr)
 library(tibble)
+#install.packages("fastDummies")
+library(fastDummies) # for dummy
+
 #_________________MISC.___________________________________
 
 
@@ -19,9 +22,13 @@ first_prep = function(data) {
       data[[col]][is.na(data[[col]])] = as.logical(col_mode)
     } 
     else if (is.factor(data[[col]]) || (is.character(data[[col]]) && length(unique(data[[col]])) > 2)) {
-      levels(data[[col]]) <- c(levels(data[[col]]), "Missing")
+     
+      if (sum(is.na(data[[col]])>0) && col!= target){ # check se ci sono na e skip della target 
+      levels(data[[col]]) = c(levels(data[[col]]), "Missing")
       data[[col]][is.na(data[[col]])] = "Missing"
-    } 
+      }
+    }
+      
     else if (length(unique(data[[col]])) == 1) {
       data[[col]] = NULL
     }
@@ -165,24 +172,32 @@ frequency_encoding= function(data, threshold) {
 
 frequency_encoding_tt= function(train_data, test_data, threshold) {
   
-  # train_enc= frequency_encoding(train_data, threshold)
-  # test_enc= frequency_encoding(test_data, threshold)
-
   categorical_cols = sapply(train_data, function(col) is.factor(col) || is.character(col))# check whether a colummn is categorical , return a T F vector
 
   for (col_name in names(train_data)[categorical_cols]) {# loops only on categorical columns because of the T/F vector
     train_data[[col_name]]= factor(train_data[[col_name]])
+    test_data[[col_name]]=factor(test_data[[col_name]])
     col_levels = nlevels(train_data[[col_name]])
+    
     if (col_name == target){ # avoids encoding the target when it's categorical
       next
     }
 
     if (col_levels > threshold) {
-      frequencies=table(train_data[[col_name]])
-      train_data[[col_name]] = frequencies[train_data[[col_name]]]
-      test_data[[col_name]] = frequencies[test_data[[col_name]]]
+      
+      frequencies_tr=table(train_data[[col_name]])# freq ciascun livello
+      levels(train_data[[col_name]])= droplevels(train_data[[col_name]], exclude= names(frequencies_tr[frequencies_tr==0])) # drop dei livelli con 0 freq
+      train_data[[col_name]] = frequencies_tr[train_data[[col_name]]] # assegnazione dei valori
+      
+      
+      to_drop=setdiff(levels(test_data[[col_name]]), levels(train_data[[col_name]]))
+      levels(test_data[[col_name]])= droplevels(test_data[[col_name]], exclude= to_drop)
+      frequencies_te= table(test_data[[col_name]])
+      test_data[[col_name]] = frequencies_te[test_data[[col_name]]]
       test_data[[col_name]][is.na(test_data[[col_name]])]=1 # in case of new levels. i.e where the freqs in train is 0
+      #test_data[[col_name]][test_data[[col_name]]==0]=1 # a volte spuntano fuori anche 0 se 
     }
+    
     else {
       encoded_col = model.matrix(~train_data[[col_name]]-1 , data = train_data)
       train_data[[col_name]]=NULL
@@ -372,13 +387,7 @@ impact_encoding_tt = function(train_data,test_data,target,threshold, smoothing_f
 
 #------------------------
 
-#install.packages("digest")
-
-
-library(dplyr)
-library(Matrix)
-
-
+                            
 simple_hash = function(input, upper) {
   hash_val = (sum(utf8ToInt(input)) %% upper) + 1
   return(hash_val)
@@ -487,6 +496,12 @@ one_hot_encoding= function(data, target){
       next 
     }
     
+    if (length(unique(data[[col_name]]))== length(data[[col_name]])){ # if costant, creates problems for one hot
+      data[[col_name]]=NULL
+      next
+    }
+    
+    
     data[[col_name]] = factor(data[[col_name]])
     levels(data[[col_name]]) = c(levels(data[[col_name]]), "Other")
     freqs= table(data[[col_name]])# first freq to get rare levels
@@ -494,40 +509,34 @@ one_hot_encoding= function(data, target){
     freqs= table(data[[col_name]]) # second freq to get new level counts
     levels(data[[col_name]])= droplevels(data[[col_name]], exclude= names(freqs[freqs==0])) # save new levels, excluding the collapsed ones
     
-    if (freqs["Other"] == length(data[col_name])){ # case of id, drop the column if all levels are rare
+    if (freqs["Other"] == length(data[[col_name]])){ # case of id, drop the column if all levels are rare
       data[[col_name]] = NULL
       next
     }
-    
+
     encoded_col = model.matrix(~data[[col_name]]-1 , data = data)
     data[[col_name]]=NULL
     colnames(encoded_col) = gsub("data\\[\\[col_name\\]\\]", paste0(col_name, sep="_"), colnames(encoded_col)) 
     data = cbind(data, encoded_col) # add new encoded columns
   } 
-  
-  
-  
   return (data)
   
 }
 #-------------
 
+
 dummy_encoding= function(data, target){
   
   c_data=copy(data)
   c_data[[target]]= NULL # remove the target
-  dmy = dummyVars(" ~ .", data = c_data, fullRank = T) #dummy 
-  dmy_data = data.frame(predict(dmy, newdata = c_data))
-  cbind(dmy_data, data[[target]])# put the target back
+  dmy_data= dummy_columns(c_data, remove_first_dummy = TRUE)
+  dmy_data[[target]]= data[[target]]# put the target back
   
   return(dmy_data)
-  
-  
-  
-  
-  
+
 }
 
+#----------------------------                            
 leaf_encoding_train <- function(training, target, threshold) {
   data <- training 
   categorical_cols = sapply(data, function(col) is.factor(col) || is.character(col)) # trovo categoriche di cui fare la codifica
@@ -676,7 +685,7 @@ cbind.fill <- function(...){
     rbind(x, matrix(, n-nrow(x), ncol(x))))) 
 }
 
-
+#-----------------------------------------
 glmm_encoding_wrapper = function(train, test, target, threshold) {
   if (is.factor(train[[target]]) && length(unique(train[[target]])) == 2) {
     return(glmm_encoding_binary(train, test, target, threshold))

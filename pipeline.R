@@ -91,34 +91,32 @@ megaf= function(data,target, encoder, thr){ # le funzioni che chiamo in megaf ce
 
 #_____________ da qui parte la pipeline__________________________ 
 
-
-# i dataset commentati mi hanno dato problemi nel caricamento 
-codes = list( Midwest_survey = 41446, 
-  Traffic_violations = 42345,
-  airlines = 42493,
-  ames_housing = 41211,
-  avocado_sales = 41210,
-  # beer = 42494, --> funziona ma ci mette troppo a caricare il dataset
-  churn = 41283,
-  click_prediction_small = 41220,
-  delays_zurich = 42495,
-  employee_salaries = 41445,
-  flight_delays = 41251,
-  hpc_job_scheduling = 41212,
-  kdd98 = 42343,
-  medical_charges = 41444 ,
-  nyc_taxi = 42208,
-  okcupid = 41278,
-  open_payments = 41442,
-  particulate_matter_ukair = 42207,
-  porto_seguro = 42206,
-  # road_safety_driver_sex = 41447,--> da errore
-  seattlecrime6 = 42496,
-  # sf_police_incidents = 42344, --> da errore
-  video_game_sales = 41216,
-  wine_reviews = 41437
+# problemi vali
+codes = list( #Midwest_survey = 41446, #ok
+              #Traffic_violations = 42345, #ok
+              #airlines = 42493, # ok
+              #ames_housing = 41211,# ok
+              #avocado_sales = 41210, # ok
+              #beer = 42494,# ok 
+              #churn = 41283, #ok 
+              #click_prediction_small = 41220, #ok
+              #delays_zurich = 42495, # ok
+              #employee_salaries = 41445, #ok
+              #flight_delays = 41251, #ok
+               #hpc_job_scheduling = 41212, #ok
+               #kdd98 = 42343, #lento a caricare dataset
+               #medical_charges = 41444 ,#ok
+              # nyc_taxi = 42208, # impact lento, errore memoria su dummy
+               #cupid = 41278,# ok, dummy da errori di memoria
+               #open_payments = 41442, #ok
+               #particulate_matter_ukair = 42207, # dummy da problemi
+               # porto_seguro = 42206, # ok
+                #road_safety_driver_sex = 41447, # problemi accesso dataset
+               #seattlecrime6 = 42496,#ok
+              # sf_police_incidents = 42344, # problemi accesso dataset
+               #video_game_sales = 41216, #ok
+               # wine_reviews = 41437 # impact lento,  dummy da problemi
 )
-
 
 
 
