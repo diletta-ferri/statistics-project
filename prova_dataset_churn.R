@@ -8,7 +8,7 @@ library(caret)
 library(pROC)
 library(lme4)
 library(rpart)
-install.packages("treeClust")
+#install.packages("treeClust")
 library(treeClust)
 
 #__________prove varie__________________________________
@@ -25,7 +25,7 @@ target = desc$default.target.attribute
 #creare il dataset iniziale:
 #churn_result <- data.frame(prima_col=c(0,0,0,0,0)) #creo il dataset in cui salverò i risultati della rete
 #finire di aggiungere:
-churn_result <- readRDS("churn_results_quasicompleto.rds")
+churn_result <- readRDS("churn_results_senza_onehot_e_dummy.rds")
 tipo_problema = "bin_classification"
 
 megaf= function(data,target, encoder, thr){ # le funzioni che chiamo in megaf ce le ho in uno script a parte
@@ -145,7 +145,7 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results,name_encoding
             for (i in 1:5) {
               pr_nn <- predict(nn_model, rep=i, newdata = scaled_test_data) 
               #Tolgo la normalizzazione (questa era la formula per annullare la normalizzazione come l'avevo fatta io, ovviamente in caso va cambiata):
-              unscaled_predicted <- pr.nn * scaling_factors[2,target] + scaling_factors[1,target] 
+              unscaled_predicted <- pr_nn * scaling_factors[2,target] + scaling_factors[1,target] 
               #Calcolo RMSE:
               rmse <- sqrt(mean((unscaled_predicted- test_data[[target]])^2))
               results[i,name_encoding] <- rmse
@@ -225,6 +225,7 @@ encodings= c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remov
 enc_1 = c("none","integer","hash","remove")
 enc_2 = c("frequency","impact","glmm","leaf")
 enc_2.1 = c("leaf")
+enc_1.1 = c("onehot","dummy")
 thresholds = c(10,25,125)
 
 data_prep = first_prep(data)
@@ -243,7 +244,7 @@ test_data <- data_prep[test_indices, ]
 train_data <- data_prep[-test_indices, ]
 
 
-for (encoder in enc_2.1){# per ogni dataset, ogni encoding
+for (encoder in enc_1.1){# per ogni dataset, ogni encoding
   if (encoder=="none"){# none fa parte delle control conditions, l'ho messo fuori perchè non fa nulla e non ha bisgno di threshold. Di conseguenza andrebbe gestito a parte.
     encoded_train= train_data
     encoded_test= test_data
@@ -288,6 +289,6 @@ for (encoder in enc_2.1){# per ogni dataset, ogni encoding
   }
 }
 
-saveRDS(churn_result, file = "churn_results_senza_onehot_e_dummy.rds")
+saveRDS(churn_result, file = "churn_results.rds")
 #quando lo vorrò ottenere di nuovo:
 #loaded_data <- readRDS("churn_results_quasicompleto.rds")
