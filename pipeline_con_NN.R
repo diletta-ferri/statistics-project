@@ -13,16 +13,17 @@ library(treeClust)
 
 #prendere il dataset:
 setOMLConfig(apikey = "c1994bdb7ecb3c6f3c8f3b35f4b47f1f", arff.reader = "farff")
-get_data = getOMLDataSet(data.id = ) #inserire il codice del dataset
+get_data = getOMLDataSet(data.id = 41278) #inserire il codice del dataset
 data = get_data$data
 #specifico la variabile target (nome della colonna target)
 target=get_data$target.features
-
+target
+View(data)
 #creo il dataset dei risultati (chiamarlo con il nome del dataset che sto analizzando)
-dataset_risultati <- data.frame(prima_col=c(0)) #ha una sola riga, ed avrà una prima colonna che rimane a 0, serve per creare il dataframe
+okcupid_risultati <- data.frame(prima_col=c(0)) #ha una sola riga, ed avrà una prima colonna che rimane a 0, serve per creare il dataframe
 
 #Specifico che tipo di problema è
-tipo_problema = "regression"
+#tipo_problema = "regression"
 #tipo_problema = "bin_classification"
 #tipo_problema = "multiclass"
 
@@ -227,7 +228,6 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results,name_encoding
 
 
 data_prep = first_prep(data)
-
 set.seed(123)
 test_percentage <- 0.3
 num_test <- round(nrow(data_prep) * test_percentage)
@@ -237,8 +237,8 @@ train_set <- data_prep[-test_indices, ]
 
 
 enc_1 = c("onehot","none","dummy","hash","integer")
-enc_2 = c("frequency","impact","glmm","leaf""remove")
-thresholds = c(10,25,125)
+enc_2 = c("frequency","impact","glmm","leaf, remove")
+thresholds = c(125)
 
 #metto qui il ciclo for degli encoder e delle threshold, per avere il come si aggiunge il modello:
 #ogni volta che finisce un encoder stampa il dataset dei risulati

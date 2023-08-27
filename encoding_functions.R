@@ -1,6 +1,6 @@
 library(caret)
 library(ranger)
-library(ISwR) ) # for utftoint in hash
+library(ISwR)  # for utftoint in hash
 library(dplyr)
 library(tibble)
 #install.packages("fastDummies")
@@ -816,4 +816,4 @@ glmm_encoding_multiclass = function(train, test, target, threshold) {  # funzion
   return(list(train = train, test = test))
 }
 
-
+}
