@@ -76,7 +76,7 @@ megaf= function(data,target, encoder, thr){ # le funzioni che chiamo in megaf ce
     encoded_data = leaf_encoding_train(train_data, target, thr)
     encoded_train = encoded_data$data
     foglie_comuni = encoded_data$most_common_leaves
-    tabella_codifica = encoding_data$output_table
+    tabella_codifica = encoded_data$output_table
     encoded_test = leaf_encoding_test(test_data, encoded_train, target, foglie_comuni, tabella_codifica)
   }
   
