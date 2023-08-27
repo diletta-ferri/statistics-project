@@ -485,6 +485,7 @@ one_hot_encoding= function(data, target, dummy=FALSE){
     colnames(encoded_col) = gsub("data\\[\\[col_name\\]\\]", paste0(col_name, sep="_"), colnames(encoded_col)) 
     
     if (dummy){
+      encoded_col=as.dataframe(encoded_col)
       encoded_col= encoded_col[-1]
   
     }
