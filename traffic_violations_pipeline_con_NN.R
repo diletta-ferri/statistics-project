@@ -1,6 +1,8 @@
-#Midwest survey 
-#Fatti: onehot, integer, frequency, impact 
-#gli altri mi da errore la funzione megaf
+#Traffic violations survey 
+#Fatti: onehot, integer25, impact, remove, frequency10 (le altre due non vanno)
+#leaf non gira (ci mette troppo) e glmm non farlo per le multiclasse
+#dummy da riprovare dopo aver aggiornato le encoding_functions
+
 
 library("OpenML")
 library(farff)
@@ -76,7 +78,7 @@ megaf= function(data,target, encoder, thr){ # le funzioni che chiamo in megaf ce
     encoded_data = leaf_encoding_train(train_data, target, thr)
     encoded_train = encoded_data$data
     foglie_comuni = encoded_data$most_common_leaves
-    tabella_codifica = encoding_data$output_table
+    tabella_codifica = encoded_data$output_table
     encoded_test = leaf_encoding_test(test_data, encoded_train, target, foglie_comuni, tabella_codifica)
   }
   
@@ -252,12 +254,13 @@ test_indices <- sample(seq_len(nrow(data_prep)), size = num_test)
 test_data <- data_prep[test_indices, ]
 train_data <- data_prep[-test_indices, ]
 
-enc_prova = c("impact")
+enc_prova = c("frequency")
 enc_1 = c("dummy","hash","integer")
-enc_1.1 = c("glmm","leaf","remove")
+enc_1.1 = c("leaf","remove","hash")
 enc_1.2 = c("onehot","integer")
 enc_2 = c("frequency","impact","glmm","leaf", "remove")
 thresholds = c(10,25,125)
+thrs=c(125)
 
 #metto qui il ciclo for degli encoder e delle threshold, per avere il come si aggiunge il modello:
 #ogni volta che finisce un encoder stampa il dataset dei risulati
@@ -297,7 +300,7 @@ for (encoder in enc_prova){# per ogni dataset, ogni encoding
     next
   }
   for (thr in thresholds){# per ogni encoding 
-    encoded_data= megaf1(data_prep, target, encoder, thr)
+    encoded_data= megaf(data_prep, target, encoder, thr)
     encoded_train= encoded_data$train
     encoded_test= encoded_data$test
     colnames(encoded_train) <- gsub("[^[:alnum:]\\_]", "_", colnames(encoded_train)) #sistemo tutti i nomi delle colonne
@@ -311,7 +314,7 @@ for (encoder in enc_prova){# per ogni dataset, ogni encoding
 }
 
 #salvare il dataframe dei risultati creato:
-saveRDS(midwest_risultati, file = "midwest_survey_risultati.rds")
+saveRDS(traffic_violations_result, file = "traffic_violations_results")
 
 
 
@@ -364,7 +367,7 @@ set.seed(123)
 formula <- as.formula(paste(target, "~", paste(feat, collapse = "+")))
 
 
-name_encoding <- "integer10"
+name_encoding <- "frequency10"
 
 #nota: sto dando per scontato che i dataset passati alla funzione siano già normalizzati con media e sd 
         
