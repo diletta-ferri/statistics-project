@@ -1,13 +1,13 @@
 #Traffic violations survey 
-#Fatti: onehot, integer25, impact, remove, frequency10 (le altre due non vanno)
+#Fatti: onehot, integer25, impact, remove, frequency10 (le altre due non vanno), dummy
 #leaf non gira (ci mette troppo) e glmm non farlo per le multiclasse
-#dummy da riprovare dopo aver aggiornato le encoding_functions
 
 
 library("OpenML")
 library(farff)
 library(data.table)
-source("encoding_functions.R") # per chiamare funzioni da un altro script
+#source("encoding_functions.R") # per chiamare funzioni da un altro script
+source("encoding_functions_off.R") #questo da usare da adesso
 source("first_prep.R")
 
 library(neuralnet)
@@ -254,13 +254,13 @@ test_indices <- sample(seq_len(nrow(data_prep)), size = num_test)
 test_data <- data_prep[test_indices, ]
 train_data <- data_prep[-test_indices, ]
 
-enc_prova = c("frequency")
+enc_prova = c("onehot")
 enc_1 = c("dummy","hash","integer")
 enc_1.1 = c("leaf","remove","hash")
 enc_1.2 = c("onehot","integer")
 enc_2 = c("frequency","impact","glmm","leaf", "remove")
 thresholds = c(10,25,125)
-thrs=c(125)
+
 
 #metto qui il ciclo for degli encoder e delle threshold, per avere il come si aggiunge il modello:
 #ogni volta che finisce un encoder stampa il dataset dei risulati
@@ -314,7 +314,7 @@ for (encoder in enc_prova){# per ogni dataset, ogni encoding
 }
 
 #salvare il dataframe dei risultati creato:
-saveRDS(traffic_violations_result, file = "traffic_violations_results")
+saveRDS(traffic_violations_result, file = "traffic_violations_risultati.rds")
 
 
 
