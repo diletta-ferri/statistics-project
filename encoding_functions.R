@@ -683,6 +683,7 @@ glmm_encoding_regression = function(train, test, target, threshold){
       
       glmm_model = lmer(glmm_formula, data = train)
       random_intercepts = ranef(glmm_model)[[1]]
+      fixed = fixef(glmm_model)
       # encoding
       encoding = category_means$mean_target + random_intercepts
       
