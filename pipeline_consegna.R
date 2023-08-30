@@ -48,3 +48,5 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
   tt=tt_split(data_prep, target, 0.3)
   train_data= tt$train
   test_data= tt$test
+
+  
