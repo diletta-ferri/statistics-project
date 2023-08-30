@@ -49,4 +49,50 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
   train_data= tt$train
   test_data= tt$test
 
+  for (encoder in encodings){# per ogni dataset, ogni encoding
+  if (encoder=="none"){# none fa parte delle control conditions, l'ho messo fuori perchè non fa nulla e non ha bisgno di threshold. Di conseguenza andrebbe gestito a parte.
+    encoded_train= train_data
+    encoded_test= test_data
+    # mettere modello
+    dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
+    print(dataset_risultati)
+    next
+    
+  }
+  if (encoder=="onehot"){# anche lui va messo fuori perchè non ha threshold
+    # in questo caso lavoro pre-splitting perchè diventava un casino gestire i vari livelli delle categoriche 
+    #e si rischiava di avere shape diverse tra train e test
+    encoded_data= one_hot_encoding(data_prep,target)
+    encoded_data_tt= tt_split(encoded_data, target, 0.3)
+    encoded_train= encoded_data_tt$train
+    encoded_test= encoded_data_tt$test
+    #mettere modello
+    dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
+    print(dataset_risultati)
+    next
+    
+  }
+  if (encoder=="dummy"){# stesso discorso di onehot
+    encoded_data= dummy_encoding(data_prep, target)
+    encoded_data_tt= tt_split(encoded_data, target, 0.3)
+    encoded_train= encoded_data_tt$train
+    encoded_test= encoded_data_tt$test
+    #mettere modello
+    dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
+    print(dataset_risultati)
+    next
+  }
+  for (thr in thresholds){# per ogni encoding 
+    encoded_data= megaf(data_prep, target, encoder, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+    # mettere modello
+    encandthr <- paste0(encoder, thr) #nome colonna per i risultati
+    dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encandthr)
+    print(dataset_risultati)
+    
+  }
+}
+
+
   
