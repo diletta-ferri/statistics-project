@@ -53,9 +53,7 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
   if (encoder=="none"){# none fa parte delle control conditions, l'ho messo fuori perchè non fa nulla e non ha bisgno di threshold. Di conseguenza andrebbe gestito a parte.
     encoded_train= train_data
     encoded_test= test_data
-    # mettere modello
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
-    print(dataset_risultati)
     next
     
   }
@@ -66,9 +64,7 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
     encoded_data_tt= tt_split(encoded_data, target, 0.3)
     encoded_train= encoded_data_tt$train
     encoded_test= encoded_data_tt$test
-    #mettere modello
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
-    print(dataset_risultati)
     next
     
   }
@@ -77,19 +73,16 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
     encoded_data_tt= tt_split(encoded_data, target, 0.3)
     encoded_train= encoded_data_tt$train
     encoded_test= encoded_data_tt$test
-    #mettere modello
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
-    print(dataset_risultati)
     next
   }
   for (thr in thresholds){# per ogni encoding 
     encoded_data= megaf(data_prep, target, encoder, thr)
     encoded_train= encoded_data$train
     encoded_test= encoded_data$test
-    # mettere modello
-    encandthr <- paste0(encoder, thr) #nome colonna per i risultati
+    encandthr = paste0(encoder, thr) #nome colonna per i risultati
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encandthr)
-    print(dataset_risultati)
+    
     
   }
 }
