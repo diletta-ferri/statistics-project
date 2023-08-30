@@ -633,7 +633,7 @@ leaf_encoding_test <- function(test_data, encoded_train, target, most_common_lea
       data[[colonna]] = NULL 
     }
   }
-  print(length(encoded_train_cols) == length(colnames(data)))
+  
   return(data)
   
 }
@@ -651,8 +651,10 @@ glmm_encoding_wrapper = function(train, test, target, threshold) {
   if (is.factor(train[[target]]) && length(unique(train[[target]])) == 2) {
     return(glmm_encoding_binary(train, test, target, threshold))
   } else if (is.factor(train[[target]]) && length(unique(train[[target]])) > 2) {
-    # return(glmm_encoding_multiclass(train, test, target, threshold))
+    #return(glmm_encoding_multiclass(train, test, target, threshold))
     return("passa al prossimo dataset - multiclasse troppo lenta con glmm")
+    print("ciao mamma")
+    return(glmm_encoding_multiclass(train, test, target, threshold))
   } else {
     return(glmm_encoding_regression(train, test, target, threshold))
   }
@@ -819,3 +821,4 @@ glmm_encoding_multiclass = function(train, test, target, threshold) {  # funzion
 }
 
 }
+
