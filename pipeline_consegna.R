@@ -36,7 +36,7 @@ codes = list( Midwest_survey = 41446,
 
 encodings= c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "none")
 thresholds = c(10,25,125)
-
+results = list()
 for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
   data_name = names(codes[i])
   id=codes[[data_name]]
@@ -94,5 +94,6 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
   }
 }
 
+# come facciamo il merge di tutti i dataset?
 
   
