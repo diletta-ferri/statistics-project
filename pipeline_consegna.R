@@ -38,29 +38,27 @@ encodings= c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remov
 thresholds = c(10,25,125)
 results = list()
 merged_results = data.frame()
-for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
+for (i in 1:length(codes)){ # iterazione su codici i.e. sui dataset
   data_name = names(codes[i])
   id=codes[[data_name]]
   get_data=getOMLDataSet(data.id = id)
   data= get_data$data # per avere i dati tabulari
-  target=get_data$target.features # le target si possono prendere cosi 
+  target=get_data$target.features # estrazione target
   
   data_prep = first_prep(data)
   tt=tt_split(data_prep, target, 0.3)
   train_data= tt$train
   test_data= tt$test
 
-  for (encoder in encodings){# per ogni dataset, ogni encoding
-    if (encoder=="none"){# none fa parte delle control conditions, l'ho messo fuori perchè non fa nulla e non ha bisgno di threshold. Di conseguenza andrebbe gestito a parte.
+  for (encoder in encodings){   # per ogni dataset, ogni encoding
+    if (encoder=="none"){# none fa parte delle control conditions, fuori perchè non ha bisogno di threshold
     encoded_train= train_data
     encoded_test= test_data
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
     next
     
     }
-    if (encoder=="onehot"){# anche lui va messo fuori perchè non ha threshold
-    # in questo caso lavoro pre-splitting perchè diventava un casino gestire i vari livelli delle categoriche 
-    #e si rischiava di avere shape diverse tra train e test
+    if (encoder=="onehot"){# 
     encoded_data= one_hot_encoding(data_prep,target)
     encoded_data_tt= tt_split(encoded_data, target, 0.3)
     encoded_train= encoded_data_tt$train
