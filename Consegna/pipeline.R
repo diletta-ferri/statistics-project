@@ -37,15 +37,19 @@ codes = list( Midwest_survey = 41446,
 
 encodings = c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "leaf", "glmm")
 thresholds = c(10,25,125)
+
 results = list()
 dataset_risultati = data.frame(prima_col=c(0))
-merged_results = data.frame(prima_col=c(0))
+merged_results = data.frame()
+
 for (i in 1:length(codes)){ # iterazione su codici i.e. sui dataset
   data_name = names(codes[i])
   id=codes[[data_name]]
   get_data=getOMLDataSet(data.id = id)
   data= get_data$data # per avere i dati tabulari
   target=get_data$target.features # estrazione target
+  
+  tipo_problema = define_task(target)
   
   data_prep = first_prep(data)
   tt=tt_split(data_prep, target, 0.3)

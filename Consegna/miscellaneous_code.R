@@ -260,6 +260,17 @@ is_binary = function(column) {
 }
 
 #------------
+define_task = function(target){
+  if(is.factor(target) && length(unique(target)) == 2){
+    return ("bin_classification")
+  } else if (is.factor(target) && length(unique(target)) > 2) {
+    return ("multiclass")
+  } else {
+    return ("regression")
+  }
+}
+
+#------------
 
 tt_split= function(data,target,p){
   #set.seed(123)
