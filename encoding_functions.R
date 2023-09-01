@@ -3,11 +3,11 @@ library(ranger)
 library(ISwR)  # for utftoint in hash
 library(dplyr)
 library(tibble)
-#install.packages("fastDummies")
 library(fastDummies) # for dummy
 
-# ENCODING FUNCTIONS 
 
+
+# ENCODING FUNCTIONS 
 
 integer_encoding= function(data, threshold) {
   categorical_cols = sapply(data, function(col) is.factor(col) || is.character(col)) # check whether a column is categorical , return a T F vector

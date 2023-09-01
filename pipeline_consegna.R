@@ -34,7 +34,7 @@ codes = list( Midwest_survey = 41446,
 
 
 
-encodings= c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "leaf", "glmm", "none")
+encodings = c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "leaf", "glmm", "none")
 thresholds = c(10,25,125)
 results = list()
 merged_results = data.frame()
@@ -58,7 +58,7 @@ for (i in 1:length(codes)){ # iterazione su codici i.e. sui dataset
     next
     
     }
-    if (encoder=="onehot"){# 
+    if (encoder=="onehot"){
     encoded_data= one_hot_encoding(data_prep,target)
     encoded_data_tt= tt_split(encoded_data, target, 0.3)
     encoded_train= encoded_data_tt$train
@@ -67,7 +67,7 @@ for (i in 1:length(codes)){ # iterazione su codici i.e. sui dataset
     next
     
     }
-    if (encoder=="dummy"){# stesso discorso di onehot
+    if (encoder=="dummy"){ 
     encoded_data= dummy_encoding(data_prep, target)
     encoded_data_tt= tt_split(encoded_data, target, 0.3)
     encoded_train= encoded_data_tt$train
@@ -75,8 +75,8 @@ for (i in 1:length(codes)){ # iterazione su codici i.e. sui dataset
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
     next
     }
-    for (thr in thresholds){# per ogni encoding 
-    encoded_data= megaf(data_prep, target, encoder, thr)
+    for (thr in thresholds){   # per ogni encoding 
+    encoded_data= get_encoded_data(data_prep, target, encoder, thr)
     encoded_train= encoded_data$train
     encoded_test= encoded_data$test
     encandthr = paste0(encoder, thr) #nome colonna per i risultati
