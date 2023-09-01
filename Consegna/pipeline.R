@@ -38,7 +38,8 @@ codes = list( Midwest_survey = 41446,
 encodings = c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "leaf", "glmm")
 thresholds = c(10,25,125)
 results = list()
-merged_results = data.frame()
+dataset_risultati = data.frame(prima_col=c(0))
+merged_results = data.frame(prima_col=c(0))
 for (i in 1:length(codes)){ # iterazione su codici i.e. sui dataset
   data_name = names(codes[i])
   id=codes[[data_name]]
