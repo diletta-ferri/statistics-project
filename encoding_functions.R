@@ -7,6 +7,8 @@ library(tibble)
 library(fastDummies) # for dummy
 
 # ENCODING FUNCTIONS 
+
+
 integer_encoding= function(data, threshold) {
   categorical_cols = sapply(data, function(col) is.factor(col) || is.character(col)) # check whether a column is categorical , return a T F vector
   
@@ -602,22 +604,13 @@ leaf_encoding_test <- function(test_data, encoded_train, target, most_common_lea
   
 }
 
-cbind.fill <- function(...){
-  nm <- list(...) 
-  nm <- lapply(nm, as.matrix)
-  n <- max(sapply(nm, nrow)) 
-  do.call(cbind, lapply(nm, function (x) 
-    rbind(x, matrix(, n-nrow(x), ncol(x))))) 
-}
+
 
 #-----------------------------------------
 glmm_encoding_wrapper = function(train, test, target, threshold) {
   if (is.factor(train[[target]]) && length(unique(train[[target]])) == 2) {
     return(glmm_encoding_binary(train, test, target, threshold))
   } else if (is.factor(train[[target]]) && length(unique(train[[target]])) > 2) {
-    #return(glmm_encoding_multiclass(train, test, target, threshold))
-    return("passa al prossimo dataset - multiclasse troppo lenta con glmm")
-    print("ciao mamma")
     return(glmm_encoding_multiclass(train, test, target, threshold))
   } else {
     return(glmm_encoding_regression(train, test, target, threshold))
@@ -784,5 +777,5 @@ glmm_encoding_multiclass = function(train, test, target, threshold) {  # funzion
   return(list(train = train, test = test))
 }
 
-}
+
 

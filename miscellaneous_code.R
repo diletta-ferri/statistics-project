@@ -8,6 +8,54 @@ library(tibble)
 library(fastDummies) # for dummy
 
 
+get_encoded_data = function(data,target, encoder, thr){ 
+  
+  if (encoder == "integer"){
+    encoded_data= integer_encoding_tt(train_data, test_data, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
+  if (encoder == "frequency"){
+    encoded_data= frequency_encoding_tt(train_data, test_data, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
+  if (encoder == "impact"){
+    encoded_data= impact_encoding_tt(train_data, test_data,target, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
+  
+  if (encoder == "hash"){
+    encoded_data= hash_encoding_tt(train_data, test_data, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
+  if (encoder == "remove"){
+    encoded_data= remove_encoding_tt(train_data, test_data, thr)
+    encoded_train= encoded_data$train
+    encoded_test= encoded_data$test
+  }
+  if (encoder == "glmm"){
+    encoded_data = glmm_encoding_wrapper(train_data, test_data, target, thr)
+    encoded_train = encoded_data$train
+    encoded_test = encoded_data$test 
+  }
+  if (encoder == "leaf"){
+    encoded_data = leaf_encoding_train(train_data, target, thr)
+    encoded_train = encoded_data$data
+    foglie_comuni = encoded_data$most_common_leaves
+    tabella_codifica = encoded_data$output_table
+    encoded_test = leaf_encoding_test(test_data, encoded_train, target, foglie_comuni, tabella_codifica)
+  }
+  
+  return (list(train= encoded_train, test= encoded_test))
+  
+} 
+
+
+#------- 
+
 NEURALNETWORK <- function(type,target,train_data,test_data,results,name_encoding) {
   
   results <- cbind(results, name_encoding = c(0,0,0,0,0)) #nel dataframe results aggiungo una colonna che si chiama come il nome dell'encoding e inizializzo i valori a 0
