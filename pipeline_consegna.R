@@ -34,9 +34,10 @@ codes = list( Midwest_survey = 41446,
 
 
 
-encodings= c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "none")
+encodings= c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "leaf", "glmm", "none")
 thresholds = c(10,25,125)
 results = list()
+merged_results = data.frame()
 for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
   data_name = names(codes[i])
   id=codes[[data_name]]
@@ -50,14 +51,14 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
   test_data= tt$test
 
   for (encoder in encodings){# per ogni dataset, ogni encoding
-  if (encoder=="none"){# none fa parte delle control conditions, l'ho messo fuori perchè non fa nulla e non ha bisgno di threshold. Di conseguenza andrebbe gestito a parte.
+    if (encoder=="none"){# none fa parte delle control conditions, l'ho messo fuori perchè non fa nulla e non ha bisgno di threshold. Di conseguenza andrebbe gestito a parte.
     encoded_train= train_data
     encoded_test= test_data
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
     next
     
-  }
-  if (encoder=="onehot"){# anche lui va messo fuori perchè non ha threshold
+    }
+    if (encoder=="onehot"){# anche lui va messo fuori perchè non ha threshold
     # in questo caso lavoro pre-splitting perchè diventava un casino gestire i vari livelli delle categoriche 
     #e si rischiava di avere shape diverse tra train e test
     encoded_data= one_hot_encoding(data_prep,target)
@@ -67,16 +68,16 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
     next
     
-  }
-  if (encoder=="dummy"){# stesso discorso di onehot
+    }
+    if (encoder=="dummy"){# stesso discorso di onehot
     encoded_data= dummy_encoding(data_prep, target)
     encoded_data_tt= tt_split(encoded_data, target, 0.3)
     encoded_train= encoded_data_tt$train
     encoded_test= encoded_data_tt$test
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
     next
-  }
-  for (thr in thresholds){# per ogni encoding 
+    }
+    for (thr in thresholds){# per ogni encoding 
     encoded_data= megaf(data_prep, target, encoder, thr)
     encoded_train= encoded_data$train
     encoded_test= encoded_data$test
@@ -84,9 +85,11 @@ for (i in 1:length(codes)){ # itero su codici i.e. sui dataset
     dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encandthr)
     
     
+    }
   }
+  
+dataset_risultati$dataset_id = data_name
+merged_results = bind_rows(merged_results, dataset_risultati)
 }
-
-# come facciamo il merge di tutti i dataset?
 
   
