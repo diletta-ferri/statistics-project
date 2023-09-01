@@ -6,7 +6,7 @@ library(ISwR)  # for utftoint in hash
 library(dplyr)
 library(tibble)
 library(fastDummies) # for dummy
-library(lme4) # for aunu 
+library(lme4) 
 
 
 get_encoded_data = function(data,target, encoder, thr){ 
@@ -65,7 +65,7 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results,name_encoding
   setDT(train_data)
   setDT(test_data)
   
-  #mi assicuro che tutte le colonne siano numeriche (faccio i controlli su tutte tranne la target, sto assumendo che nei casi di regressione sia giusta e numerica)
+  #mi assicuro che tutte le colonne siano numeriche - non effettuo il controllo sulla target
   non_numeric_columns <- sapply(train_data[, ..feat], function(x) !is.numeric(x))
   non_numeric_columns <- names(non_numeric_columns)[non_numeric_columns]
   for (col in non_numeric_columns) {
@@ -148,7 +148,7 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results,name_encoding
             #NN:
             nn_model <- neuralnet(formula, data = scaled_train_data, hidden = 10, threshold=0.1, rep=1, linear.output = FALSE)
             for (i in 1:1) {
-              pr_nn_probs <- predict(nn_model, rep=i, newdata = scaled_test_data) #da le probabilità di ognuni classe
+              pr_nn_probs <- predict(nn_model, rep=i, newdata = scaled_test_data) #da le probabilità di ogni classe
               #rendo uniformi le classi predette e quella del test, per poter calcolare l'AUC
               column_names <- unique(test_data[[target]])
               max_column_indices <- max.col(pr_nn_probs)
@@ -157,7 +157,7 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results,name_encoding
               #Calcolo AUC:
               roc_obj <- roc(test_data[[target]], pred_class_names)
               auc_score <- roc_obj$auc              
-              results[i,name_encoding] <- auc_score #salva nella colonna corrispondente i risultati della rete
+              results[i,name_encoding] <- auc_score 
             }
             
           },
@@ -183,7 +183,7 @@ NEURALNETWORK <- function(type,target,train_data,test_data,results,name_encoding
             }
             
             #NN:
-            train_data[[target]] <- as.factor(train_data[[target]]) #mi assicuro che sia in livelli, se lo sono già tutte non è necessario
+            train_data[[target]] <- as.factor(train_data[[target]]) #mi assicuro che sia in livelli
             nn_model <- neuralnet(formula, data = scaled_train_data, hidden = 10, threshold=0.1, rep=1, linear.output = FALSE)
             
             for (i in 1:1) {
