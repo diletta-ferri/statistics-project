@@ -6,43 +6,7 @@ library(tibble)
 #install.packages("fastDummies")
 library(fastDummies) # for dummy
 
-#_________________MISC.___________________________________
-
-drop_cost= function(data){
-  
-  col_names = colnames(data)
-  
-  for (col in col_names){
-    if (length(unique(data[[col]])) == 1 ) {
-      data[[col]] = NULL  # Drop constants
-    }
-  }
-  
-  return(data)
-}
-
-#----------
-
-
-is_binary = function(column) {
-  unique_values = unique(column)
-  num_unique = length(unique_values)
-  return(num_unique == 2 && all(unique_values %in% c(0, 1)))
-}
-
-#------------
-
-tt_split= function(data,target,p){
-  #set.seed(123)
-  split_indices = createDataPartition(data[[target]], p = p, list = FALSE)
-  train_data = data[-split_indices, ]
-  test_data = data[split_indices, ]
-  
-  return(list(train=train_data, test= test_data))
-  
-#----------------------ENCODING-FUNCTIONS-------------------------------------------
-
-
+# ENCODING FUNCTIONS 
 integer_encoding= function(data, threshold) {
   categorical_cols = sapply(data, function(col) is.factor(col) || is.character(col)) # check whether a column is categorical , return a T F vector
   
