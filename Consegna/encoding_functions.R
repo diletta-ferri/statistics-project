@@ -4,7 +4,7 @@ library(ISwR)  # for utftoint in hash
 library(dplyr)
 library(tibble)
 library(fastDummies) # for dummy
-
+library(lme4)
 
 
 # ENCODING FUNCTIONS 

@@ -1,7 +1,8 @@
 library("OpenML")
 library(farff)
 library(data.table)
-
+source("miscellaneous_code.R")
+source("encoding_functions.R")
 
 setOMLConfig(apikey = "c1994bdb7ecb3c6f3c8f3b35f4b47f1f", arff.reader = "farff")
 
@@ -34,7 +35,7 @@ codes = list( Midwest_survey = 41446,
 
 
 
-encodings = c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "leaf", "glmm", "none")
+encodings = c("integer", "impact", "frequency", "hash", "onehot", "dummy", "remove", "leaf", "glmm")
 thresholds = c(10,25,125)
 results = list()
 merged_results = data.frame()
@@ -51,13 +52,6 @@ for (i in 1:length(codes)){ # iterazione su codici i.e. sui dataset
   test_data= tt$test
 
   for (encoder in encodings){   # per ogni dataset, ogni encoding
-    if (encoder=="none"){# none fa parte delle control conditions, fuori perchè non ha bisogno di threshold
-    encoded_train= train_data
-    encoded_test= test_data
-    dataset_risultati= NEURALNETWORK(tipo_problema, target, encoded_train, encoded_test, dataset_risultati, encoder)
-    next
-    
-    }
     if (encoder=="onehot"){
     encoded_data= one_hot_encoding(data_prep,target)
     encoded_data_tt= tt_split(encoded_data, target, 0.3)
